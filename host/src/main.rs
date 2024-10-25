@@ -101,42 +101,19 @@ fn extract_verifier(receipt: &Receipt) -> Result<Artifact, VerificationError> {
         let id_bn254_fr = fr_from_hex_string(&hex::encode(id_bn554))
             .map_err(|_| VerificationError::ReceiptFormatError)?;
 
-        let pvk = ark_groth16::prepare_verifying_key(&verifying_key.0);
-        let mut encoded_pvk = Vec::new();
-        pvk.serialize_uncompressed(&mut encoded_pvk)
-            .map_err(|err| anyhow!(err))?;
-
-        let mut encoded_proof = Vec::new();
-        let proof = Proof::<Bn254> {
-            a: g1_from_bytes(&seal.a)?,
-            b: g2_from_bytes(&seal.b)?,
-            c: g1_from_bytes(&seal.c)?,
-        };
-        proof
-            .serialize_uncompressed(&mut encoded_proof)
-            .map_err(|err| anyhow!(err))?;
-
-        let mut encoded_prepared_inputs = Vec::new();
-        let prepared_inputs = Groth16::<Bn254>::prepare_inputs(
-            &pvk,
-            &public_inputs.iter().map(|x| x.0).collect::<Vec<_>>(),
+        let verifier = Groth16Verifier::new(
+            &Seal::from_vec(&inner.seal).map_err(|_| VerificationError::ReceiptFormatError)?,
+            &[a0, a1, c0, c1, id_bn254_fr],
+            &params.verifying_key,
         )
-        .map_err(|err| anyhow!(err))?;
-        prepared_inputs
-            .serialize_uncompressed(&mut encoded_prepared_inputs)
-            .map_err(|err| anyhow!(err))?;
+        .map_err(|_| VerificationError::ReceiptFormatError)?;
 
         Ok(Artifact {
-            encoded_pvk,
-            encoded_proof,
-            encoded_prepared_inputs,
+            encoded_pvk: verifier.encoded_pvk,
+            encoded_proof: verifier.encoded_proof,
+            encoded_prepared_inputs: verifier.encoded_prepared_inputs,
         })
-        // let verifier = Groth16Verifier::new(
-        //     &Seal::from_vec(&inner.seal).map_err(|_| VerificationError::ReceiptFormatError)?,
-        //     &[a0, a1, c0, c1, id_bn254_fr],
-        //     &params.verifying_key,
-        // )
-        // .map_err(|_| VerificationError::ReceiptFormatError)?;
+        
         // Ok(verifier)
     } else {
         return Err(VerificationError::ReceiptFormatError);

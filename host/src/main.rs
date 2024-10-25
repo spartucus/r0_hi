@@ -7,7 +7,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use methods::{HELLO_GUEST_ELF, HELLO_GUEST_ID};
 use risc0_binfmt::Digestible;
 use risc0_groth16::{
-    fr_from_hex_string, g1_from_bytes, g2_from_bytes, split_digest, Seal,
+    fr_from_hex_string, split_digest, Seal,
     Verifier as Risc0Groth16Verifier,
 };
 use risc0_zkp::{core::digest::Digest, verify::VerificationError};

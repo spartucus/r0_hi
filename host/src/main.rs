@@ -101,7 +101,7 @@ fn extract_verifier(receipt: &Receipt) -> Result<Artifact, VerificationError> {
         let id_bn254_fr = fr_from_hex_string(&hex::encode(id_bn554))
             .map_err(|_| VerificationError::ReceiptFormatError)?;
 
-        let verifier = Groth16Verifier::new(
+        let verifier = Risc0Groth16Verifier::new(
             &Seal::from_vec(&inner.seal).map_err(|_| VerificationError::ReceiptFormatError)?,
             &[a0, a1, c0, c1, id_bn254_fr],
             &params.verifying_key,

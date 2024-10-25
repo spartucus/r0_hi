@@ -73,7 +73,7 @@ fn extract_verifier(receipt: &Receipt) -> Result<Groth16Verifier, VerificationEr
         .as_ref()
         .ok_or(VerificationError::VerifierParametersMissing)?;
 
-    if let InnerReceipt::Groth16(inner) = receipt.inner {
+    if let InnerReceipt::Groth16(inner) = &receipt.inner {
         let (a0, a1) =
             split_digest(params.control_root).map_err(|_| VerificationError::ReceiptFormatError)?;
         let (c0, c1) = split_digest(inner.claim.digest::<sha::Impl>())

@@ -5,13 +5,15 @@ edition = "2021"
 
 [dependencies]
 methods = { path = "../methods" }
-risc0-zkvm = { version = "1.1.2" }
+risc0-zkvm = { git = "https://github.com/spartucus/risc0", branch = "pub-verifier"}
 risc0-groth16 = { git = "https://github.com/spartucus/risc0", branch = "pub-verifier"}
-risc0-zkp = { version = "1.1.2"}
-risc0-binfmt = { version = "1.1.2"}
+risc0-zkp = { git = "https://github.com/spartucus/risc0", branch = "pub-verifier"}
+risc0-binfmt = { git = "https://github.com/spartucus/risc0", branch = "pub-verifier"}
+
 ark-groth16 = { version = "0.4", default-features = false}
 ark-serialize = { version = "0.4"}
 ark-bn254 = { version = "0.4"}
+
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 serde = "1.0"
 hex = "0.4"

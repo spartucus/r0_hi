@@ -3,7 +3,7 @@
 use anyhow::{anyhow, Error, Result};
 use ark_bn254::{Bn254, G1Projective};
 use ark_groth16::{Groth16, PreparedVerifyingKey, Proof};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::CanonicalDeserialize;
 use methods::{HELLO_GUEST_ELF, HELLO_GUEST_ID};
 use risc0_binfmt::Digestible;
 use risc0_groth16::{
@@ -68,23 +68,14 @@ fn main() {
     let artifact = extract_verifier(&receipt);
     println!("extract groth16: {}", artifact.is_ok());
 
-    if artifact.is_ok() {
-        let ret = groth16_verify(&artifact.unwrap());
+    if let Ok(artifact) = artifact {
+        save_artifact(&artifact);
+        let ret = groth16_verify(&artifact);
         println!("verify: {}", ret.is_ok());
     }
 }
 
-#[derive(Clone, Debug)]
-struct Artifact {
-    /// prepared verifying key little endian encoded.
-    encoded_pvk: Vec<u8>,
-    /// proof little endian encoded.
-    encoded_proof: Vec<u8>,
-    /// prepared public inputs little endian encoded.
-    encoded_prepared_inputs: Vec<u8>,
-}
-
-fn extract_verifier(receipt: &Receipt) -> Result<Artifact, VerificationError> {
+fn extract_verifier(receipt: &Receipt) -> Result<Risc0Groth16Verifier, VerificationError> {
     let ctx = VerifierContext::default();
     let params = ctx
         .groth16_verifier_parameters
@@ -108,21 +99,19 @@ fn extract_verifier(receipt: &Receipt) -> Result<Artifact, VerificationError> {
         )
         .map_err(|_| VerificationError::ReceiptFormatError)?;
 
-        Ok(Artifact {
-            encoded_pvk: verifier.encoded_pvk,
-            encoded_proof: verifier.encoded_proof,
-            encoded_prepared_inputs: verifier.encoded_prepared_inputs,
-        })
-        
-        // Ok(verifier)
+        Ok(verifier)
     } else {
         return Err(VerificationError::ReceiptFormatError);
     }
 }
 
-fn save_artifact(artifact: &Artifact) {}
+fn save_artifact(artifact: &Risc0Groth16Verifier) {
+    std::fs::write("pvk", &artifact.encoded_pvk).unwrap();
+    std::fs::write("proof", &artifact.encoded_proof).unwrap();
+    std::fs::write("prepared_inputs", &artifact.encoded_prepared_inputs).unwrap();
+}
 
-fn groth16_verify(artifact: &Artifact) -> Result<(), Error> {
+fn groth16_verify(artifact: &Risc0Groth16Verifier) -> Result<(), Error> {
     let pvk = &PreparedVerifyingKey::deserialize_uncompressed(&*artifact.encoded_pvk)
         .map_err(|err| anyhow!(err))?;
     let proof =
